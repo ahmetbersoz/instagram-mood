@@ -3,22 +3,33 @@ const getPosts = fetch('https://www.instagram.com/odtukeciler?__a=1')
 .then(data => {
     const posts = data.graphql.user.edge_owner_to_timeline_media.edges;
     const url = posts.shift().node.display_url;
-
-    console.log(url);
+    let container = document.getElementById('container');
 
     async function getImage() {
         const image = await faceapi.fetchImage(url);
-        const detections = await faceapi.detectAllFaces(image, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
-        return detections;
+        const canvas = faceapi.createCanvasFromMedia(image);
+
+        container.append(image);
+        container.append(canvas);
+
+        const displaySize = { width: image.width, height: image.height };
+        faceapi.matchDimensions(canvas, displaySize);
+
+        const detections = await faceapi.detectAllFaces(image, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
+        const resizedDetections = faceapi.resizeResults(detections, displaySize)
+        faceapi.draw.drawDetections(canvas, resizedDetections);
+        faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
+
+        return image;
     }
 
-    getImage().then(detections => {
-        console.log(detections);
+    getImage().then(image => {
     })
 
 });
 
 Promise.all([
+    faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
 	faceapi.nets.tinyFaceDetector.loadFromUri('./models'),
 	faceapi.nets.faceExpressionNet.loadFromUri('./models')
 ]).then(getPosts);
