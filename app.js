@@ -16,9 +16,12 @@ const getPosts = fetch('https://www.instagram.com/odtukeciler?__a=1')
         faceapi.matchDimensions(canvas, displaySize);
 
         const detections = await faceapi.detectAllFaces(image, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
-        const resizedDetections = faceapi.resizeResults(detections, displaySize)
-        faceapi.draw.drawDetections(canvas, resizedDetections);
-        faceapi.draw.drawFaceLandmarks(canvas, resizedDetections)
+        const resizedResults = faceapi.resizeResults(detections, displaySize)
+        faceapi.draw.drawDetections(canvas, resizedResults);
+        faceapi.draw.drawFaceLandmarks(canvas, resizedResults);
+
+        const minProbability = 0.05
+        faceapi.draw.drawFaceExpressions(canvas, resizedResults, minProbability)        
 
         return image;
     }
